@@ -43,3 +43,8 @@ a.disabled, a .disabled  {
 	color: gold;
 	font-weight: bold;
 }
+
+footer input[type="text"] {
+
+	font-size: 25px;
+}
