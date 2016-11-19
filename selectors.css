@@ -3,8 +3,22 @@ header {
 	border: solid 1px blue;
 }
 
-header > ul >li {
+nav > ul >li {
 
 	display: inline-block;
 	margin: 0 3rem 0 3rem;
+}
+
+.disabled {
+
+	background-color: grey;
+}
+a.disabled,  {
+	background-color: purple;
+}
+
+
+.active {
+
+	color: yellow;
 }
