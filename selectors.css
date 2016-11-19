@@ -6,4 +6,5 @@ header {
 header > ul >li {
 
 	display: inline-block;
+	margin: 0 3rem 0 3rem;
 }
