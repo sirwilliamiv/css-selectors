@@ -22,3 +22,12 @@ a.disabled, a .disabled  {
 
 	color: yellow;
 }
+
+#redy, #redy+h4 {
+	color: red;
+
+}
+
+#blue, #blue+h4{
+	color: blue;
+}
