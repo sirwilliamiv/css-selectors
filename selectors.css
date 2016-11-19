@@ -31,3 +31,15 @@ a.disabled, a .disabled  {
 #blue, #blue+h4{
 	color: blue;
 }
+
+.grandparent > h4 {
+
+	border: solid 1px black;
+	border-radius: 30%;
+}
+
+.promo {
+
+	color: gold;
+	font-weight: bold;
+}
