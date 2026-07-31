@@ -1,0 +1,23 @@
+{
+  "name": "ask-about-billy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A grounded assistant that answers questions about how Billy works with AI coding agents.",
+  "scripts": {
+    "dev": "vercel dev",
+    "check": "tsx scripts/check-corpus.ts && tsc --noEmit",
+    "eval": "tsx evals/run.ts",
+    "predeploy": "npm run check",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.9.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vercel": "^58.4.4"
+  }
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ask Claude how Billy works with AI</title>
+    <meta
+      name="description"
+      content="A small grounded assistant that answers questions about Billy's AI engineering practice."
+    />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <h1>Ask Claude how Billy works with AI</h1>
+        <p class="sub">
+          Rather than telling you how I use AI, here's something you can
+          interrogate. It answers from a short document describing my actual
+          practice — context design, hooks, agent architecture, verification —
+          and declines everything else.
+        </p>
+      </header>
+
+      <div id="setup-banner" class="banner" hidden>
+        <strong>Not configured yet.</strong> The corpus is still a template, so
+        the assistant genuinely doesn't know anything yet. Fill in
+        <code>corpus/workflow.md</code> and redeploy.
+      </div>
+
+      <section id="transcript" class="transcript" aria-live="polite" aria-busy="false">
+        <div class="starter">
+          <p class="starter-label">Try one of these</p>
+          <div id="suggestions" class="suggestions"></div>
+        </div>
+      </section>
+
+      <form id="composer" class="composer">
+        <label class="sr-only" for="input">Your question</label>
+        <textarea
+          id="input"
+          rows="1"
+          maxlength="2000"
+          placeholder="Ask about context design, evals, agent architecture…"
+          autocomplete="off"
+        ></textarea>
+        <button id="send" type="submit">Ask</button>
+      </form>
+
+      <footer class="foot">
+        <p>
+          Claude Opus 5, grounded in a fixed corpus. It answers from that
+          document only and says so when something falls outside it. Source and
+          eval suite are in the repo.
+        </p>
+      </footer>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
