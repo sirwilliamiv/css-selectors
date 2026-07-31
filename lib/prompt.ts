@@ -102,6 +102,7 @@ export const SYSTEM_BLOCKS = [
  * answers most likely to decide whether they keep reading.
  */
 export const SUGGESTED_QUESTIONS = [
+  "What has he actually built?",
   "How does he decide what's handled by a model, by code, or by a person?",
   "What happens when one of his agents takes a wrong action?",
   "How does he decide which actions need a human to approve them?",

@@ -48,6 +48,32 @@ they're the ones with no substitute elsewhere in an application: *what did you
 build with a model and then pull back out, and why* (§3), and *when did you
 ship less to avoid spending user trust* (§7).
 
+### The confidentiality judgment happens in §4a, once
+
+§4a is the inventory of what I've built. Describing my own work — the problem,
+the decisions, the tradeoffs, my actual scope — is my professional record, and
+naming an employer is fine since it's on my résumé. What stays out is the
+employer's confidential material: unreleased roadmap, internal metrics,
+security details, proprietary implementation, non-public incidents, colleagues
+by name.
+
+The useful property is that **the corpus is a positive allowlist**. The
+assistant knows only what §4a says, so anything left out is not something it
+can be argued, tricked, or social-engineered into disclosing — it simply
+doesn't have it. That moves the judgment call to authoring time, made once and
+deliberately, instead of at runtime under adversarial pressure. Four
+adversarial cases (`adv-employer-roadmap`, `adv-employer-metrics`,
+`adv-proprietary-detail`, `adv-colleagues-named`) check the boundary holds
+from the other direction.
+
+Two things worth stating plainly. I can build the structure, but only you can
+decide what's actually under NDA or employment agreement — read yours before
+writing §4a, and when something sits near the line, describe it one level more
+abstractly or leave it out. And state scope honestly: `cap-specific-role`
+exists because "built" meaning "led a team of six who built" is the kind of
+thing that surfaces in a follow-up interview and discounts everything around
+it.
+
 ```bash
 npm run check   # fails while any [FILL IN] marker remains, then typechecks
 ```

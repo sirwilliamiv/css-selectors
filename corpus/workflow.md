@@ -73,10 +73,46 @@ made you remove it — is the actual signal of judgment.]
 
 ---
 
-## 4. A worked example, end to end
+## 4. Track record
 
-[FILL IN — Pick one system you built or led that actually takes actions, and
-walk it end to end. `Inbox Admin` if that's the strongest one; swap it if not.
+### 4a. What Billy has built
+
+[FILL IN — The inventory. This is the section a reviewer reaches for first,
+and the one the assistant currently has the least to say without.
+
+Cover the body of work at Playlist and anywhere else that's relevant. For each
+item, four lines is enough:
+
+- **What it is** and what problem it solved
+- **What Billy's actual role was** — built it, led the team that built it,
+  designed it and handed it off. Be precise; see the note below.
+- **The decision worth knowing about** — the one non-obvious call you made
+- **Where it ended up** — shipped, in production, sunset, superseded
+
+Order by relevance to agentic systems and team leadership, not
+chronologically. Three things described with real specificity beats ten
+listed.
+
+**On confidentiality.** Naming your employer is fine — it's on your résumé.
+Describing what you built and how you decided to build it that way is your
+professional record. What stays out: unreleased roadmap, internal metrics and
+financials, security details, proprietary implementation specifics, non-public
+incidents, and colleagues by name. If something sits close to the line, either
+describe it one level more abstractly ("a system that reconciles two sources
+of truth for X") or leave it out. Whatever you don't write here, the assistant
+cannot say — the corpus is an allowlist, so this judgment gets made once,
+here, rather than under pressure at runtime.
+
+**On scope.** State plainly what was yours and what was the team's. The
+assistant is instructed not to inflate, but it can only be as accurate as this
+section. A reviewer who discovers in a follow-up interview that "built" meant
+"led a team of six who built" will discount everything else you said.]
+
+### 4b. One system, end to end
+
+[FILL IN — Pick the strongest item from 4a — ideally one that takes real
+actions on someone's behalf — and walk it end to end. `Inbox Admin` if that's
+the one; swap it if not.
 
 Cover, in roughly this order:
 
