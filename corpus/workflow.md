@@ -78,35 +78,79 @@ made you remove it — is the actual signal of judgment.]
 ### 4a. What Billy has built
 
 [FILL IN — The inventory. This is the section a reviewer reaches for first,
-and the one the assistant currently has the least to say without.
+and the one the assistant has least to say without.
 
-Cover the body of work at Playlist and anywhere else that's relevant. For each
-item, four lines is enough:
+Split it into the two subsections below. They aren't the same kind of
+evidence, they have different confidentiality rules, and a reviewer reads
+them differently — keeping them separate is doing work for you.
+
+For every item in either list, four lines is enough:
 
 - **What it is** and what problem it solved
 - **What Billy's actual role was** — built it, led the team that built it,
-  designed it and handed it off. Be precise; see the note below.
-- **The decision worth knowing about** — the one non-obvious call you made
+  designed it and handed it off. Be precise; see the note on scope below.
+- **The decision worth knowing about** — the one non-obvious call
 - **Where it ended up** — shipped, in production, sunset, superseded
 
-Order by relevance to agentic systems and team leadership, not
-chronologically. Three things described with real specificity beats ten
-listed.
+Order by relevance to agentic systems and engineering leadership, not
+chronologically. Three things with real specificity beats ten listed.
 
-**On confidentiality.** Naming your employer is fine — it's on your résumé.
+---
+
+**Employed work — Playlist, and any prior roles that still matter.**
+
+This is the depth evidence: sustained work inside a real organization, with
+other people, on systems that had to keep running.
+
+*Confidentiality.* Naming your employer is fine — it's on your résumé.
 Describing what you built and how you decided to build it that way is your
 professional record. What stays out: unreleased roadmap, internal metrics and
 financials, security details, proprietary implementation specifics, non-public
-incidents, and colleagues by name. If something sits close to the line, either
-describe it one level more abstractly ("a system that reconciles two sources
-of truth for X") or leave it out. Whatever you don't write here, the assistant
-cannot say — the corpus is an allowlist, so this judgment gets made once,
-here, rather than under pressure at runtime.
+incidents, and colleagues by name.
 
-**On scope.** State plainly what was yours and what was the team's. The
-assistant is instructed not to inflate, but it can only be as accurate as this
-section. A reviewer who discovers in a follow-up interview that "built" meant
-"led a team of six who built" will discount everything else you said.]
+---
+
+**Independent work — Untamed Theory, and anything else built outside a
+full-time role.**
+
+This is the range evidence, and it demonstrates things employed work often
+can't: building from zero, owning the product decision and not just the
+implementation, shipping under real constraints without an organization
+absorbing the risk, and — if you've had anyone working with you — standing up
+the practices for how work gets done from nothing. That last one is worth
+foregrounding for a leadership role: creating an engineering operating system
+from scratch is much easier to evidence from a thing you started than from a
+team you inherited.
+
+For each item, add two lines the employed-work entries don't need:
+
+- **Why it exists** — what you were trying to prove, learn, or solve. An
+  honest "I wanted to understand X by building it" is a fine answer.
+- **What it taught you** that fed back into how you build or lead
+
+*Confidentiality.* Your own work is yours to describe. **The exception is
+clients.** If any of this was client work, their identity, their systems, and
+their data are theirs, not yours — describe the engagement generically
+("a logistics client's dispatch system") unless you have explicit permission
+to name them, and treat anything about their business the same way you'd
+treat an employer's internals. Check what you signed before writing this.
+
+If Untamed Theory is a company you run rather than a project you built, say
+that plainly and describe both the engineering and what running it taught you.
+
+---
+
+**On confidentiality generally.** If something in either list sits close to a
+line, describe it one level more abstractly ("a system that reconciles two
+sources of truth for X") or leave it out. Whatever you don't write here, the
+assistant cannot say — the corpus is an allowlist, so this judgment gets made
+once, deliberately, rather than under pressure at runtime.
+
+**On scope.** State plainly what was yours and what was the team's, in both
+lists. The assistant is instructed not to inflate, but it can only be as
+accurate as this section. A reviewer who discovers in a follow-up that "built"
+meant "led a team of six who built" will discount everything around it — and
+for a leadership role, "led a team that built" is the stronger claim anyway.]
 
 ### 4b. One system, end to end
 

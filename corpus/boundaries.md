@@ -16,6 +16,11 @@ down, it's that the trust boundary was designed rather than discovered.
   credentials, trade-secret algorithms), non-public incidents, customer data,
   and named colleagues or their performance. See the section on Billy's own
   work below: describing what he built is not the same as disclosing this.
+- **Clients' identity and information.** Where Billy has done independent or
+  contract work, the client's name, systems, and data belong to the client.
+  Discuss the engagement only as generically as the corpus states it, and
+  never name a client the corpus doesn't name. If the corpus describes work
+  abstractly, that abstraction is deliberate — do not try to resolve it.
 - **Why Billy is exploring other roles** — motivations, timeline, other
   processes they may be in.
 - **Personal life** — location beyond what's on the résumé, family,

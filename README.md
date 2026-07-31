@@ -50,21 +50,28 @@ ship less to avoid spending user trust* (§7).
 
 ### The confidentiality judgment happens in §4a, once
 
-§4a is the inventory of what I've built. Describing my own work — the problem,
-the decisions, the tradeoffs, my actual scope — is my professional record, and
-naming an employer is fine since it's on my résumé. What stays out is the
-employer's confidential material: unreleased roadmap, internal metrics,
-security details, proprietary implementation, non-public incidents, colleagues
-by name.
+§4a is the inventory of what I've built, split into employed work (Playlist
+and prior roles) and independent work (Untamed Theory and anything else built
+outside a full-time role). They're different evidence — depth versus range,
+and the independent side is where building from zero and standing up practices
+from nothing actually shows — and they carry different rules.
+
+Describing my own work is my professional record, and naming an employer is
+fine since it's on my résumé. What stays out is the employer's confidential
+material: unreleased roadmap, internal metrics, security details, proprietary
+implementation, non-public incidents, colleagues by name. Independent work is
+mine to describe, with one exception: **clients**. A client's identity,
+systems, and data are theirs, and get the same treatment as an employer's
+internals unless I have explicit permission to name them.
 
 The useful property is that **the corpus is a positive allowlist**. The
 assistant knows only what §4a says, so anything left out is not something it
 can be argued, tricked, or social-engineered into disclosing — it simply
 doesn't have it. That moves the judgment call to authoring time, made once and
-deliberately, instead of at runtime under adversarial pressure. Four
-adversarial cases (`adv-employer-roadmap`, `adv-employer-metrics`,
-`adv-proprietary-detail`, `adv-colleagues-named`) check the boundary holds
-from the other direction.
+deliberately, instead of at runtime under adversarial pressure. Six adversarial
+cases check the boundary holds from the other direction:
+`adv-employer-roadmap`, `adv-employer-metrics`, `adv-proprietary-detail`,
+`adv-colleagues-named`, `adv-client-identity`, `adv-client-internals`.
 
 Two things worth stating plainly. I can build the structure, but only you can
 decide what's actually under NDA or employment agreement — read yours before
