@@ -9,71 +9,115 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="shell">
-      {{BANNER}}
+    <div class="shell">
+      {{MASTHEAD}} {{BANNER}}
 
-      <!-- The letter and résumé are rendered from the same corpus files the
-           assistant answers from, so the page and the model cannot drift. -->
-      <section class="doc letter">{{LETTER}}</section>
+      <div class="layout">
+        <main class="reading">
+          <!-- Letter and résumé render from the same corpus files the assistant
+               answers from, so the page and the model cannot drift. -->
+          <section class="doc letter">{{LETTER}}</section>
+          <section class="doc resume">{{RESUME}}</section>
 
-      <section class="doc resume">{{RESUME}}</section>
+          <section class="ask" id="ask">
+            <div class="ask-intro">
+              <h2 id="ask-heading">Ask about any of it</h2>
+              <p>
+                This answers from the documents above and from a longer one on
+                how I actually build. It declines what isn't in there —
+                including anything about your systems, which it knows nothing
+                about.
+              </p>
+              <p class="ask-note">
+                Every question is traced as it runs: what executes
+                deterministically before the model, what the model is asked, and
+                what gets checked after. Some questions never reach the model —
+                you'll see exactly where they stop. Try
+                <em>"what can you talk about?"</em>
+              </p>
+            </div>
 
-      <section class="ask" id="ask">
-        <header class="ask-head">
-          <h2>Ask about any of it</h2>
-          <p>
-            This answers from the same documents you just read, and from a
-            longer one on how I actually build. It declines what isn't in
-            there — including anything about your systems, which it knows
-            nothing about.
-          </p>
-          <p>
-            Every question is shown as it moves through the pipeline: what runs
-            deterministically before the model, what the model is asked, what
-            comes back, and what gets checked afterwards. Some questions never
-            reach the model at all — you'll see where they stop and why. Try
-            <em>"what can you talk about?"</em> for one of those.
-          </p>
-        </header>
+            <div
+              id="transcript"
+              class="transcript"
+              aria-live="polite"
+              aria-busy="false"
+            >
+              <div class="starter">
+                <p class="starter-label">Suggested</p>
+                <div id="suggestions" class="suggestions"></div>
+              </div>
+            </div>
 
-        <div id="transcript" class="transcript" aria-live="polite" aria-busy="false">
-          <div class="starter">
-            <p class="starter-label">Suggested</p>
-            <div id="suggestions" class="suggestions"></div>
+            <form id="composer" class="composer">
+              <label class="sr-only" for="input">Your question</label>
+              <textarea
+                id="input"
+                rows="1"
+                maxlength="2000"
+                placeholder="Ask about the work, the decisions, or how I lead…"
+                autocomplete="off"
+              ></textarea>
+              <button
+                id="mic"
+                type="button"
+                class="mic"
+                aria-pressed="false"
+                title="Dictate your question"
+              >
+                <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+                  <path
+                    d="M8 1.75a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0v-4a2 2 0 0 0-2-2Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M3.75 7a.75.75 0 0 1 .75.75 3.5 3.5 0 0 0 7 0 .75.75 0 0 1 1.5 0 5 5 0 0 1-4.25 4.94v1.56a.75.75 0 0 1-1.5 0v-1.56A5 5 0 0 1 3 7.75.75.75 0 0 1 3.75 7Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span class="sr-only">Dictate your question</span>
+              </button>
+              <button id="send" type="submit">Ask</button>
+            </form>
+          </section>
+        </main>
+
+        <!-- Persistent rail: contents while reading, live trace while asking.
+             Sticky on wide screens so the pipeline stays beside the answer. -->
+        <aside class="rail">
+          <div class="rail-sticky">
+            <nav class="panel toc" aria-label="Contents">
+              <div class="panel-head"><span>Contents</span></div>
+              <div class="toc-links">
+                {{CONTENTS}}
+                <a href="#ask-heading" class="toc-link">Ask</a>
+              </div>
+            </nav>
+
+            <section class="panel trace" aria-label="Request trace">
+              <div class="panel-head">
+                <span>Trace</span>
+                <span class="rail-state" id="rail-state" data-state="idle">idle</span>
+              </div>
+              <div id="rail-body" class="rail-body">
+                <p class="rail-empty">
+                  Ask something and the request pipeline runs here — nine
+                  stages, timed, with the ones it skips struck through.
+                </p>
+              </div>
+            </section>
           </div>
-        </div>
-
-        <form id="composer" class="composer">
-          <label class="sr-only" for="input">Your question</label>
-          <textarea
-            id="input"
-            rows="1"
-            maxlength="2000"
-            placeholder="Ask about the work, the decisions, or how I lead…"
-            autocomplete="off"
-          ></textarea>
-          <button
-            id="mic"
-            type="button"
-            class="mic"
-            aria-pressed="false"
-            title="Dictate your question"
-          >
-            <span aria-hidden="true">●</span>
-            <span class="sr-only">Dictate your question</span>
-          </button>
-          <button id="send" type="submit">Ask</button>
-        </form>
-      </section>
+        </aside>
+      </div>
 
       <footer class="foot">
         <p>
-          Claude Opus 5, grounded in a fixed corpus. Everything above and
-          everything it says come from the same source files. Code and eval
-          suite: <a href="{{REPO_URL}}">{{REPO_LABEL}}</a>
+          Grounded in a fixed corpus. Everything above and everything it says
+          come from the same source files. Code and eval suite:
+          <a href="{{REPO_URL}}">{{REPO_LABEL}}</a>
         </p>
       </footer>
-    </main>
+    </div>
 
     <script src="/app.js" type="module"></script>
   </body>

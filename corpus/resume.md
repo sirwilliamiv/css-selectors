@@ -14,6 +14,19 @@
 > describe, employer internals and client identities are not.
 > Delete this blockquote when done.
 
+## Identity
+
+> The build reads this section to render the masthead: the first line is your
+> name, the second is your title line, the third is your contact links.
+> Keep the shape — three lines, in this order.
+
+# [FILL IN — Your name]
+
+[FILL IN — One line. Role and domain, e.g. "Engineering leadership · agentic
+systems · consumer fintech". This sits directly under your name.]
+
+[FILL IN — email] · [FILL IN — github.com/you] · [FILL IN — linkedin.com/in/you]
+
 ## Summary
 
 [FILL IN — Two sentences. What kind of engineer and leader, and the shape of

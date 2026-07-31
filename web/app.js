@@ -46,44 +46,81 @@ function addTurn(who, kind) {
   return el;
 }
 
-// ---------- pipeline ----------
+// ---------- trace ----------
+
+const railBody = document.getElementById("rail-body");
+const railState = document.getElementById("rail-state");
 
 /**
- * The pipeline is declared by the server before any work happens, so the whole
- * architecture is on screen from the first frame and then lights up stage by
- * stage. Seeing which stages are skipped is the interesting part: a canned
- * route or a rate-limit rejection never reaches the model at all.
+ * The server declares every stage before doing any work, so the whole
+ * architecture is on screen from the first frame and then fills in. Durations
+ * render as a waterfall scaled to the slowest stage in the run, which is what
+ * turns a list into something you can actually read a bottleneck off.
+ *
+ * Skipped stages are struck through rather than hidden: the road not taken is
+ * the most interesting thing this view has to show.
  */
-function mountPipeline(turnEl, stages) {
-  const wrap = document.createElement("details");
-  wrap.className = "pipeline";
-  wrap.open = true;
-  wrap.innerHTML =
-    `<summary><span class="pipe-title">Request pipeline</span>` +
-    `<span class="pipe-count" data-done="0">0/${stages.length}</span></summary>` +
-    `<ol class="stages">${stages
-      .map(
-        (s) =>
-          `<li class="stage" data-id="${escapeHtml(s.id)}" data-status="pending">
-             <span class="stage-dot" aria-hidden="true"></span>
-             <div class="stage-main">
-               <div class="stage-head">
-                 <span class="stage-label">${escapeHtml(s.label)}</span>
-                 <span class="stage-kind kind-${escapeHtml(s.kind)}">${s.kind === "model" ? "model" : "code"}</span>
-                 <span class="stage-ms"></span>
-               </div>
-               <p class="stage-detail"></p>
-               <div class="stage-meta"></div>
-             </div>
-           </li>`,
-      )
-      .join("")}</ol>`;
-  turnEl.insertBefore(wrap, turnEl.querySelector(".body"));
-  return wrap;
+const trace = { rows: new Map(), timings: new Map(), summary: {} };
+
+function setRailState(state, label) {
+  railState.dataset.state = state;
+  railState.textContent = label;
 }
 
-function updateStage(pipeEl, ev) {
-  const li = pipeEl?.querySelector(`.stage[data-id="${CSS.escape(ev.id)}"]`);
+function resetTrace(stages) {
+  trace.rows.clear();
+  trace.timings.clear();
+  trace.summary = { modelCalls: 0, tokens: "—", cache: "—" };
+
+  railBody.innerHTML =
+    `<dl class="trace-summary">
+       <div><dt>elapsed</dt><dd data-k="elapsed">0ms</dd></div>
+       <div><dt>model calls</dt><dd data-k="modelCalls">0</dd></div>
+       <div><dt>out tokens</dt><dd data-k="tokens">—</dd></div>
+     </dl>
+     <ol class="stages">${stages
+       .map(
+         (s) =>
+           `<li class="stage" data-id="${escapeHtml(s.id)}" data-status="pending">
+              <span class="stage-dot" aria-hidden="true"></span>
+              <div class="stage-main">
+                <div class="stage-head">
+                  <span class="stage-label">${escapeHtml(s.label)}</span>
+                  <span class="stage-kind kind-${escapeHtml(s.kind)}">${s.kind === "model" ? "model" : "code"}</span>
+                  <span class="stage-ms"></span>
+                </div>
+                <div class="stage-bar"><i></i></div>
+                <p class="stage-detail"></p>
+                <div class="stage-meta"></div>
+              </div>
+            </li>`,
+       )
+       .join("")}</ol>`;
+
+  for (const li of railBody.querySelectorAll(".stage")) {
+    trace.rows.set(li.dataset.id, li);
+  }
+  setRailState("running", "running");
+}
+
+function setSummary(key, value) {
+  const el = railBody.querySelector(`[data-k="${key}"]`);
+  if (el) el.textContent = value;
+}
+
+/** Rescale every bar whenever a new slowest stage appears. */
+function redrawBars() {
+  const slowest = Math.max(1, ...trace.timings.values());
+  for (const [id, ms] of trace.timings) {
+    const bar = trace.rows.get(id)?.querySelector(".stage-bar i");
+    if (bar) bar.style.setProperty("--w", `${Math.max(2, (ms / slowest) * 100)}%`);
+  }
+  const total = [...trace.timings.values()].reduce((a, b) => a + b, 0);
+  setSummary("elapsed", `${total}ms`);
+}
+
+function applyStage(ev) {
+  const li = trace.rows.get(ev.id);
   if (!li) return;
 
   li.dataset.status = ev.status;
@@ -91,18 +128,24 @@ function updateStage(pipeEl, ev) {
   li.querySelector(".stage-ms").textContent =
     typeof ev.ms === "number" && ev.status !== "skip" ? `${ev.ms}ms` : "";
 
-  const meta = li.querySelector(".stage-meta");
-  meta.innerHTML = Object.entries(ev.meta ?? {})
+  li.querySelector(".stage-meta").innerHTML = Object.entries(ev.meta ?? {})
     .map(
       ([k, v]) =>
         `<span class="kv"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(v)}</span></span>`,
     )
     .join("");
 
-  const counter = pipeEl.querySelector(".pipe-count");
-  const done = pipeEl.querySelectorAll('.stage:not([data-status="pending"])').length;
-  counter.textContent = `${done}/${pipeEl.querySelectorAll(".stage").length}`;
-  counter.dataset.done = String(done);
+  if (typeof ev.ms === "number" && ev.status !== "skip") {
+    trace.timings.set(ev.id, ev.ms);
+    redrawBars();
+  }
+
+  if (ev.id === "model" && ev.status === "ok") {
+    trace.summary.modelCalls = 1;
+    setSummary("modelCalls", "1");
+  }
+  if (ev.id === "route" && ev.meta?.["model calls"] === 0) setSummary("modelCalls", "0");
+  if (ev.meta?.["output tokens"] != null) setSummary("tokens", String(ev.meta["output tokens"]));
 }
 
 // ---------- streaming ----------
@@ -121,8 +164,8 @@ async function ask(question) {
   const body = turn.querySelector(".body");
   body.innerHTML = '<span class="cursor"></span>';
 
-  let pipeEl = null;
   let answer = "";
+  let failed = false;
 
   const paint = () => {
     body.innerHTML = render(answer) + '<span class="cursor"></span>';
@@ -163,12 +206,17 @@ async function ask(question) {
         if (!line.trim()) continue;
         const ev = JSON.parse(line);
 
-        if (ev.type === "pipeline") pipeEl = mountPipeline(turn, ev.stages);
-        else if (ev.type === "stage") updateStage(pipeEl, ev);
-        else if (ev.type === "delta") {
+        if (ev.type === "pipeline") resetTrace(ev.stages);
+        else if (ev.type === "stage") {
+          applyStage(ev);
+          if (ev.status === "fail") failed = true;
+        } else if (ev.type === "delta") {
           answer += ev.text;
           paint();
-        } else if (ev.type === "error") fail(ev.message);
+        } else if (ev.type === "error") {
+          failed = true;
+          fail(ev.message);
+        }
       }
     }
 
@@ -177,10 +225,12 @@ async function ask(question) {
     else history.pop();
   } catch (err) {
     console.error(err);
+    failed = true;
     fail(err.message || "Couldn't reach the assistant. Try again.");
     history.pop(); // drop the unanswered question so the next turn is valid
   } finally {
     document.querySelectorAll(".cursor").forEach((c) => c.remove());
+    setRailState(failed ? "failed" : "done", failed ? "failed" : "complete");
     busy = false;
     sendBtn.disabled = false;
     transcript.setAttribute("aria-busy", "false");
@@ -278,7 +328,36 @@ input.addEventListener("keydown", (e) => {
   }
 });
 
+/** Marks the contents entry for whichever section is currently in view. */
+function setupScrollSpy() {
+  const links = new Map(
+    [...document.querySelectorAll(".toc-link")].map((a) => [a.getAttribute("href").slice(1), a]),
+  );
+  const headings = [...links.keys()]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!headings.length) return;
+
+  const seen = new Set();
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) seen.add(e.target.id);
+        else seen.delete(e.target.id);
+      }
+      // The topmost visible heading wins, so the marker doesn't jitter when
+      // several sections are on screen at once.
+      const current = headings.find((h) => seen.has(h.id));
+      for (const [id, a] of links) a.classList.toggle("current", id === current?.id);
+    },
+    { rootMargin: "-10% 0px -70% 0px" },
+  );
+
+  for (const h of headings) observer.observe(h);
+}
+
 setupMic();
+setupScrollSpy();
 
 fetch("/api/config")
   .then((r) => r.json())

@@ -82,10 +82,93 @@ function headingAsks(html: string): string {
   });
 }
 
+/**
+ * Slugs every `##` and records it, so the rail can carry a contents list.
+ * Without it the right gutter sits empty until someone asks a question, which
+ * on a wide screen just reads as a layout mistake.
+ */
+const toc: { id: string; label: string }[] = [];
+
+function sectionIds(html: string): string {
+  return html.replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/g, (_m, attrs: string, inner: string) => {
+    const label = inner.replace(/<[^>]+>/g, "").trim();
+    const id = label
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    toc.push({ id, label });
+    return `<h2 id="${escapeAttr(id)}"${attrs}>${inner}</h2>`;
+  });
+}
+
 const render = (md: string, withHeadingAsks = false) => {
-  const html = marked.parse(askChips(stripAuthorNotes(md)), { async: false }) as string;
+  let html = marked.parse(askChips(stripAuthorNotes(md)), { async: false }) as string;
+  html = sectionIds(html);
   return withHeadingAsks ? headingAsks(html) : html;
 };
+
+/**
+ * Pulls name / title / contacts out of the résumé's Identity section so the
+ * masthead has a single source too. Falls back to placeholders rather than
+ * throwing — a half-written corpus should still build and be viewable.
+ */
+function identity(md: string) {
+  const section = md.split(/^##\s+/m).find((s) => s.startsWith("Identity")) ?? "";
+
+  // Parse by paragraph, not by line: a wrapped title is still one field.
+  // The first paragraph is the section heading itself, so it's dropped.
+  const paras = section
+    .split(/\n\s*\n/)
+    .map((p) =>
+      p
+        .split("\n")
+        .filter((l) => !l.trim().startsWith(">"))
+        .join(" ")
+        .trim(),
+    )
+    .filter(Boolean)
+    .slice(1);
+
+  const nameIdx = paras.findIndex((p) => p.startsWith("# "));
+  const name = nameIdx >= 0 ? paras[nameIdx].slice(2).trim() : "Your name";
+  const after = paras.slice(nameIdx + 1);
+
+  return {
+    name,
+    title: after[0] ?? "",
+    contacts: (after[1] ?? "")
+      .split("·")
+      .map((c) => c.trim())
+      .filter(Boolean),
+  };
+}
+
+const ID = identity(RESUME);
+
+const MASTHEAD =
+  `<header class="masthead">` +
+  `<div class="masthead-main">` +
+  `<h1 class="name">${escapeAttr(ID.name)}</h1>` +
+  (ID.title ? `<p class="title">${escapeAttr(ID.title)}</p>` : "") +
+  (ID.contacts.length
+    ? `<p class="contacts">${ID.contacts
+        .map((c) => {
+          const href = c.includes("@")
+            ? `mailto:${c}`
+            : /^https?:/.test(c)
+              ? c
+              : `https://${c}`;
+          return `<a href="${escapeAttr(href)}">${escapeAttr(c)}</a>`;
+        })
+        .join("<span class='sep'>/</span>")}</p>`
+    : "") +
+  `</div>` +
+  // A quiet nod to what the page actually is: a running system, not a PDF.
+  `<div class="sysbadge" aria-label="This page is backed by a live model">` +
+  `<span class="sysbadge-dot"></span>` +
+  `<span class="sysbadge-text">claude opus 5<br><span>grounded · scoped</span></span>` +
+  `</div>` +
+  `</header>`;
 
 const BANNER = CORPUS_IS_TEMPLATE
   ? `<div class="banner"><strong>Not configured yet.</strong> The corpus is still a
@@ -93,15 +176,28 @@ const BANNER = CORPUS_IS_TEMPLATE
      <code>corpus/</code> and rebuild.</div>`
   : "";
 
+/** The Identity section is consumed by the masthead; don't render it twice. */
+const resumeBody = RESUME.replace(/^##\s+Identity[\s\S]*?(?=^##\s)/m, "");
+
 const page = readFileSync(join(ROOT, "web/index.template.html"), "utf8")
-  .replace("{{TITLE}}", "Billy — engineering leadership, agentic systems")
+  .replace("{{TITLE}}", `${ID.name} — ${ID.title || "engineering leadership"}`)
   .replace(
     "{{DESCRIPTION}}",
     "An interactive letter and résumé. Read it, then ask it questions.",
   )
+  .replace("{{MASTHEAD}}", MASTHEAD)
   .replace("{{BANNER}}", BANNER)
   .replace("{{LETTER}}", render(LETTER))
-  .replace("{{RESUME}}", render(RESUME, true))
+  .replace("{{RESUME}}", render(resumeBody, true))
+  .replace(
+    "{{CONTENTS}}",
+    toc
+      .map(
+        (t) =>
+          `<a href="#${escapeAttr(t.id)}" class="toc-link">${escapeAttr(t.label)}</a>`,
+      )
+      .join(""),
+  )
   .replace(/\{\{REPO_URL\}\}/g, escapeAttr(REPO_URL))
   .replace(/\{\{REPO_LABEL\}\}/g, escapeAttr(REPO_LABEL));
 
