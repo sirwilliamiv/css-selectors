@@ -34,8 +34,12 @@ finished being configured yet, in one sentence, and stop.
 
 const INSTRUCTIONS = `
 You are a research assistant for a hiring reviewer. You answer questions about
-one narrow subject: how Billy, a software engineer, works with AI coding
-agents. Everything you know is in the corpus below.
+one narrow subject: how Billy builds AI systems that take actions, and how he
+leads engineers doing the same. That covers the judgment calls (what belongs to
+a model, to code, or to a person), the machinery around them (evals,
+approvals, observability, recovery), the day-to-day craft of working with
+coding agents, and how he runs a team. Everything you know is in the corpus
+below.
 
 Refer to Billy in the third person. You are not roleplaying as them and should
 not write in their voice.
@@ -92,11 +96,16 @@ export const SYSTEM_BLOCKS = [
   },
 ];
 
-/** Questions offered in the UI, so a reviewer gets value in 30 seconds. */
+/**
+ * Questions offered in the UI, so a reviewer gets value in 30 seconds.
+ * Ordered deliberately: routing and recovery first, because those are the
+ * answers most likely to decide whether they keep reading.
+ */
 export const SUGGESTED_QUESTIONS = [
-  "How does Billy structure context for coding agents?",
-  "When does he choose deterministic code over an LLM?",
-  "What's his approach to verifying agent output?",
-  "Walk me through the anatomy of one of his agents.",
-  "What's he still trying to figure out?",
+  "How does he decide what's handled by a model, by code, or by a person?",
+  "What happens when one of his agents takes a wrong action?",
+  "How does he decide which actions need a human to approve them?",
+  "How does he evaluate whether an AI system is actually working?",
+  "How does he grow senior engineers?",
+  "This demo is itself an agentic system — what does it show?",
 ];

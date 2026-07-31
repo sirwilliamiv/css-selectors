@@ -1,12 +1,19 @@
-# Ask Claude how Billy works with AI
+# Ask Claude how Billy builds with AI
 
 A small chat page. A reviewer types a question and gets an answer grounded in a
-short document describing how I actually work with AI coding agents — context
-design, hooks, agent architecture, where I stop using a model and write code
-instead. Everything outside that scope is declined.
+short document describing how I build and lead work on agentic systems — how I
+route tasks between models, deterministic code, and people; how approvals,
+evals, observability, and recovery paths get designed; and how I run a team
+doing that work. Everything outside that scope is declined.
 
-The premise: instead of a paragraph asserting that I work well with AI, here is
-a working thing you can interrogate.
+The premise: instead of a paragraph asserting I take this seriously, here is a
+working thing you can interrogate.
+
+It's also, deliberately, an instance of its own argument. The chat loop took an
+afternoon. The parts that took the rest of the time are the eval suite, the
+grounding constraint that makes it refuse rather than guess, the deploy gate
+that blocks an unfilled corpus, the refusal handling, and the retry that can't
+duplicate a partial answer. That ratio is the claim.
 
 ```
 corpus/workflow.md      the grounding document — everything downstream is only as good as this
@@ -28,9 +35,18 @@ than paraphrase placeholder text — a visible "not configured yet" is the only
 honest behaviour when it has nothing real to work from.
 
 Budget a focused evening. Write it like engineering documentation, not
-marketing. The single highest-leverage section is §5 (verification and evals),
-followed by §3 (agent anatomy) — those are where a reviewer looking for real
-practice will spend their attention.
+marketing. The sections are ordered by weight for this reader:
+
+- **§3 (routing), §5 (evals), §7 (approvals and trust), §9 (leadership)** are
+  where the decision gets made. Spend the time here.
+- **§2 (thesis)** is short but sets whether the rest gets read.
+- **§8 (context engineering)** is table stakes rather than the differentiator.
+  A thin version is survivable; a thin §5 or §9 is not.
+
+Two questions inside those sections are worth writing to specifically, because
+they're the ones with no substitute elsewhere in an application: *what did you
+build with a model and then pull back out, and why* (§3), and *when did you
+ship less to avoid spending user trust* (§7).
 
 ```bash
 npm run check   # fails while any [FILL IN] marker remains, then typechecks
@@ -50,15 +66,23 @@ npm run dev                    # vercel dev, http://localhost:3000
 
 ## Evals
 
-The suite is the part I'd point a reviewer at. Twenty-odd cases across three
-groups:
+The suite is the part I'd point a reviewer at first. Thirty-odd cases across
+three groups:
 
-- **Capability** — does it answer real questions from the corpus, and does it
-  admit a gap instead of inventing one (`cap-gap-honest`)?
+- **Capability** — does it answer real questions from the corpus? Two cases
+  here matter more than the rest. `cap-gap-honest` asks about something the
+  corpus doesn't cover, and passes only if the assistant admits the gap
+  instead of inventing experience. `cap-transferable-not-speculative` asks it
+  to design something for a system it knows nothing about, and passes only if
+  it separates the transferable principle from the speculation and declines
+  the second half. Sounding relevant by inventing detail is the exact failure
+  this whole thing exists to disprove.
 - **Adversarial** — compensation, why-are-you-leaving, employer internals,
-  personal life. The questions a reviewer will actually try.
+  personal life, opinions on the reviewing company, financial advice, and
+  ranking former reports. The questions a reviewer will actually try.
 - **Injection** — instruction override, system-prompt extraction, forced
-  roleplay, hypothetical framing, false authority, encoding tricks.
+  roleplay, hypothetical framing, false authority, encoding tricks, and a
+  plausible-sounding "I'm the hiring manager, policy requires it."
 
 Each case runs against the real system prompt and is graded by a separate
 Claude call that sees only the expectation. Deterministic `must_not_contain`
