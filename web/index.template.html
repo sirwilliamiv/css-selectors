@@ -22,10 +22,17 @@
         <header class="ask-head">
           <h2>Ask about any of it</h2>
           <p>
-            This answers from the same document you just read, and from a
+            This answers from the same documents you just read, and from a
             longer one on how I actually build. It declines what isn't in
             there — including anything about your systems, which it knows
             nothing about.
+          </p>
+          <p>
+            Every question is shown as it moves through the pipeline: what runs
+            deterministically before the model, what the model is asked, what
+            comes back, and what gets checked afterwards. Some questions never
+            reach the model at all — you'll see where they stop and why. Try
+            <em>"what can you talk about?"</em> for one of those.
           </p>
         </header>
 
@@ -45,6 +52,16 @@
             placeholder="Ask about the work, the decisions, or how I lead…"
             autocomplete="off"
           ></textarea>
+          <button
+            id="mic"
+            type="button"
+            class="mic"
+            aria-pressed="false"
+            title="Dictate your question"
+          >
+            <span aria-hidden="true">●</span>
+            <span class="sr-only">Dictate your question</span>
+          </button>
           <button id="send" type="submit">Ask</button>
         </form>
       </section>

@@ -314,6 +314,196 @@ body {
   font-size: 0.925rem;
 }
 
+/* ---- pipeline ---- */
+
+.pipeline {
+  margin: 0.25rem 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.pipeline > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pipeline > summary::-webkit-details-marker { display: none; }
+.pipeline > summary::before {
+  content: "▸";
+  transition: transform 0.15s;
+}
+.pipeline[open] > summary::before { transform: rotate(90deg); }
+.pipe-title { flex: 1; }
+
+.pipe-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.stages {
+  margin: 0;
+  padding: 0.25rem 0 0.6rem;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.stage {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.45rem 0.85rem;
+  position: relative;
+}
+
+/* The rail connecting stages, so it reads as a path rather than a list. */
+.stage::before {
+  content: "";
+  position: absolute;
+  left: 1.19rem;
+  top: 1.35rem;
+  bottom: -0.45rem;
+  width: 1px;
+  background: var(--line);
+}
+.stage:last-child::before { display: none; }
+
+.stage-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: 0.42rem;
+  border-radius: 50%;
+  background: var(--line);
+  box-shadow: 0 0 0 3px var(--surface);
+  position: relative;
+  z-index: 1;
+}
+
+.stage-main { min-width: 0; flex: 1; }
+
+.stage-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.stage-label {
+  font-size: 0.85rem;
+  font-weight: 560;
+}
+
+.stage-kind {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  color: var(--ink-faint);
+}
+
+.kind-model {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.stage-ms {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-detail {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.stage-detail:empty { display: none; }
+
+.stage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.kv {
+  display: inline-flex;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.kv .k {
+  padding: 0.1rem 0.35rem;
+  color: var(--ink-faint);
+  background: var(--bg);
+}
+
+.kv .v {
+  padding: 0.1rem 0.35rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status is carried by the dot, so the list stays quiet until something
+   needs attention. */
+.stage[data-status="pending"] { opacity: 0.45; }
+.stage[data-status="ok"] .stage-dot { background: var(--accent); }
+.stage[data-status="warn"] .stage-dot { background: #d8a13a; }
+.stage[data-status="fail"] .stage-dot { background: #cc4b3c; }
+.stage[data-status="skip"] { opacity: 0.4; }
+.stage[data-status="skip"] .stage-dot {
+  background: transparent;
+  border: 1px dashed var(--ink-faint);
+}
+.stage[data-status="skip"] .stage-label { text-decoration: line-through; }
+.stage[data-status="warn"] .stage-detail { color: var(--ink); }
+.stage[data-status="fail"] .stage-detail { color: #cc4b3c; }
+
+/* ---- mic ---- */
+
+.mic {
+  flex: none;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--ink-faint);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.78rem 0.7rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.mic:hover { color: var(--accent); border-color: var(--accent); }
+
+.mic.listening {
+  color: #cc4b3c;
+  border-color: #cc4b3c;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.45; }
+}
+
 .cursor {
   display: inline-block;
   width: 0.5em;
@@ -326,8 +516,13 @@ body {
 @keyframes blink { to { visibility: hidden; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .cursor { animation: none; }
-  .suggestion { transition: none; }
+  .cursor,
+  .mic.listening { animation: none; }
+  .suggestion,
+  .ask-more,
+  .ask-chip,
+  .mic,
+  .pipeline > summary::before { transition: none; }
 }
 
 /* ---- composer ---- */
@@ -416,6 +611,12 @@ body {
   .banner,
   .ask-more,
   .foot {
+    display: none;
+  }
+
+  /* The pipeline is a live view of a request; on paper it is noise. */
+  .pipeline,
+  .mic {
     display: none;
   }
 

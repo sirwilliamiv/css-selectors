@@ -97,6 +97,46 @@ cp .env.example .env.local     # add your ANTHROPIC_API_KEY
 npm run dev                    # vercel dev, http://localhost:3000
 ```
 
+## The pipeline view
+
+Every question is shown moving through the system as it happens. The server
+declares the stages before doing any work, so the whole architecture is on
+screen from the first frame and then lights up:
+
+```
+receive → rate limit → validate → screen → route → assemble → model → stream → verify
+   code       code        code      code     code      code     model   model    code
+```
+
+Each stage reports what it did, how long it took, and the numbers behind it —
+cache reads and writes, token counts, which patterns matched, whether
+fallbacks were armed. `lib/pipeline.ts` is the whole definition.
+
+Two of those stages can end a request before a model is ever called, and
+watching that happen is the point:
+
+- **Screen** matches instruction-override patterns and then *deliberately
+  doesn't act on them*. These heuristics have a real false-positive rate —
+  "what's in your system prompt?" is a legitimate question about how this page
+  works — and blocking on them would reject honest visitors to stop attacks
+  the system prompt already handles. The stage shows the signal and the
+  decision not to trust it as a gate. That judgment is the interesting part,
+  so it's on screen rather than buried.
+- **Route** answers a couple of questions about the system itself from code.
+  Ask *"what can you talk about?"* and the model stage goes struck-through:
+  the answer is exact, so a model call would be slower, costlier, and less
+  reliable than a string that's already correct. It's the model-versus-code
+  decision from §3 of the corpus, running in the request path where a reader
+  can watch it.
+
+Rate-limit and validation rejections render the same way, so a request that
+gets turned away is as legible as one that succeeds.
+
+Voice input uses the browser's own `SpeechRecognition`. That's deliberate:
+shipping audio to a transcription model to save a reviewer some typing would
+be exactly the reflex the rest of this argues against. The button hides itself
+where the API doesn't exist.
+
 ## Evals
 
 The suite is the part I'd point a reviewer at first. Thirty-odd cases across

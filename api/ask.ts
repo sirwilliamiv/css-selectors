@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_BLOCKS } from "../lib/prompt.js";
+import { STAGES, screen, route, type StageId, type StageStatus } from "../lib/pipeline.js";
 
 const MODEL = "claude-opus-5";
 
@@ -22,13 +23,13 @@ const MAX_TURNS = 24;
 const RATE_LIMIT = { windowMs: 60_000, max: 12 };
 const hits = new Map<string, number[]>();
 
-function rateLimited(ip: string): boolean {
+function rateCheck(ip: string): { limited: boolean; used: number } {
   const now = Date.now();
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT.windowMs);
   recent.push(now);
   hits.set(ip, recent);
   if (hits.size > 5000) hits.clear();
-  return recent.length > RATE_LIMIT.max;
+  return { limited: recent.length > RATE_LIMIT.max, used: recent.length };
 }
 
 const client = new Anthropic();
@@ -78,19 +79,14 @@ function requestParams(messages: Msg[], withFallbacks: boolean) {
     output_config: { effort: EFFORT },
     system: SYSTEM_BLOCKS,
     messages,
-    ...(withFallbacks
-      ? { betas: [FALLBACK_BETA], fallbacks: "default" as const }
-      : {}),
+    ...(withFallbacks ? { betas: [FALLBACK_BETA], fallbacks: "default" as const } : {}),
   };
 }
 
-function isBetaRejection(err: unknown): boolean {
+const isBetaRejection = (err: unknown) => {
   const e = err as { status?: number; message?: string };
-  return (
-    e?.status === 400 &&
-    /fallback|beta/i.test(e?.message ?? "")
-  );
-}
+  return e?.status === 400 && /fallback|beta/i.test(e?.message ?? "");
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -98,33 +94,135 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  // The stream opens before any work happens, so every stage — including the
+  // ones that reject the request — is reported through the same channel and
+  // shows up in the pipeline the reader is watching.
+  res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Accel-Buffering", "no");
+
+  const send = (obj: unknown) => res.write(JSON.stringify(obj) + "\n");
+  const reached = new Set<StageId>();
+  let clock = Date.now();
+
+  const stage = (
+    id: StageId,
+    status: StageStatus,
+    detail: string,
+    meta?: Record<string, string | number>,
+  ) => {
+    const now = Date.now();
+    reached.add(id);
+    send({ type: "stage", id, status, detail, meta, ms: now - clock });
+    clock = now;
+  };
+
+  /** Anything not reached is reported as skipped, so the path taken is legible. */
+  const finish = (stopReason: string) => {
+    for (const s of STAGES) {
+      if (!reached.has(s.id)) send({ type: "stage", id: s.id, status: "skip", detail: "not reached" });
+    }
+    send({ type: "done", stop_reason: stopReason });
+    res.end();
+  };
+
+  send({ type: "pipeline", stages: STAGES });
+
+  // -- receive -------------------------------------------------------------
+  const raw = (req.body as { messages?: Msg[] })?.messages ?? [];
+  const question = raw[raw.length - 1]?.content ?? "";
+  stage("receive", "ok", "Request body accepted over HTTPS.", {
+    characters: question.length,
+    "turns in context": raw.length,
+  });
+
+  // -- rate limit ----------------------------------------------------------
   const ip =
     (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
     req.socket.remoteAddress ||
     "unknown";
-
-  if (rateLimited(ip)) {
-    res.status(429).json({ error: "Too many questions in a short window — give it a minute." });
+  const rate = rateCheck(ip);
+  if (rate.limited) {
+    stage("ratelimit", "fail", "Per-IP budget exhausted; request dropped before any spend.", {
+      window: `${RATE_LIMIT.windowMs / 1000}s`,
+      limit: RATE_LIMIT.max,
+    });
+    send({ type: "error", message: "Too many questions in a short window — give it a minute." });
+    finish("rate_limited");
     return;
   }
+  stage("ratelimit", "ok", "Within the per-IP budget for this window.", {
+    used: `${rate.used}/${RATE_LIMIT.max}`,
+    window: `${RATE_LIMIT.windowMs / 1000}s`,
+  });
 
+  // -- validate ------------------------------------------------------------
   const validated = validate(req.body);
   if (typeof validated === "string") {
-    res.status(400).json({ error: validated });
+    stage("validate", "fail", validated);
+    send({ type: "error", message: validated });
+    finish("invalid_request");
     return;
   }
+  stage("validate", "ok", "Shape, roles, and length caps check out.", {
+    "max chars": MAX_MESSAGE_CHARS,
+    "max turns": MAX_TURNS,
+  });
 
-  res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store");
-  res.setHeader("X-Accel-Buffering", "no");
+  // -- screen --------------------------------------------------------------
+  const { signals } = screen(question);
+  if (signals.length) {
+    stage(
+      "screen",
+      "warn",
+      "Injection markers matched. Recording the signal, not acting on it — these heuristics have a real false-positive rate, and the boundaries in the system prompt already cover this. Blocking here would reject honest questions to stop attacks that are handled anyway.",
+      { matched: signals.join(", ") },
+    );
+  } else {
+    stage("screen", "ok", "No instruction-override markers matched.", {
+      patterns: 5,
+      cost: "0 tokens",
+    });
+  }
+
+  // -- route ---------------------------------------------------------------
+  const { canned } = route(question);
+  if (canned) {
+    stage(
+      "route",
+      "warn",
+      "This question has an exact answer, so it is served from code. A model call here would be slower, costlier, and less reliable than a string that is already correct.",
+      { handler: `canned:${canned.id}`, "model calls": 0 },
+    );
+    for (const chunk of canned.answer.match(/[\s\S]{1,24}/g) ?? []) {
+      send({ type: "delta", text: chunk });
+    }
+    stage("verify", "ok", "Deterministic answer; nothing to verify.");
+    finish("end_turn");
+    return;
+  }
+  stage("route", "ok", "Open-ended question — needs the model.", { handler: "model" });
+
+  // -- assemble ------------------------------------------------------------
+  const systemChars = SYSTEM_BLOCKS.reduce((n, b) => n + b.text.length, 0);
+  stage("assemble", "ok", "Letter, résumé, practice doc, and boundaries assembled into a frozen prefix.", {
+    "system blocks": SYSTEM_BLOCKS.length,
+    "prefix chars": systemChars,
+    "cache breakpoint": "last block",
+  });
 
   // Tracked at handler scope: once any token has reached the client, no retry
   // can be safe — it would duplicate the partial answer already on screen.
   let streamed = false;
 
-  const send = (obj: unknown) => res.write(JSON.stringify(obj) + "\n");
-
   const attempt = async (withFallbacks: boolean) => {
+    stage("model", "ok", `Calling ${MODEL}.`, {
+      effort: EFFORT,
+      thinking: "adaptive (default)",
+      "max tokens": MAX_TOKENS,
+      fallbacks: withFallbacks ? "on refusal" : "off",
+    });
+
     const stream = client.beta.messages.stream(requestParams(validated, withFallbacks));
 
     for await (const event of stream) {
@@ -139,19 +237,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const final = await stream.finalMessage();
+    const usage = final.usage;
+
+    stage("stream", "ok", "Response streamed to the browser as it was generated.", {
+      "output tokens": usage.output_tokens,
+      "cache read": usage.cache_read_input_tokens ?? 0,
+      "cache write": usage.cache_creation_input_tokens ?? 0,
+      uncached: usage.input_tokens,
+    });
 
     // Check stop_reason before trusting the output — a refusal can arrive with
     // empty content, or mid-stream after a partial answer.
     if (final.stop_reason === "refusal") {
+      stage("verify", "fail", "Safety classifier declined this request.", {
+        stop_reason: "refusal",
+      });
       send({
         type: "error",
         message: streamed
           ? "\n\n(Cut off there — that question tripped a safety filter. Try rephrasing.)"
           : "That question tripped a safety filter rather than a topic boundary. Try rephrasing it.",
       });
+    } else {
+      stage("verify", "ok", "Completed normally; output is safe to render.", {
+        stop_reason: final.stop_reason ?? "end_turn",
+      });
     }
 
-    send({ type: "done", stop_reason: final.stop_reason });
+    finish(final.stop_reason ?? "end_turn");
   };
 
   try {
@@ -176,10 +289,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       e?.status === 429
         ? "The API is rate limiting right now. Try again shortly."
         : "Something went wrong reaching the model. Try again.";
-    // Headers are already sent, so surface the error in-band.
+    stage(streamed ? "verify" : "model", "fail", message, { status: e?.status ?? "network" });
     send({ type: "error", message });
-    send({ type: "done", stop_reason: "error" });
-  } finally {
-    res.end();
+    finish("error");
   }
 }
