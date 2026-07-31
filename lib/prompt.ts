@@ -14,11 +14,15 @@ const CORPUS_DIR = join(process.cwd(), "corpus");
 
 const read = (name: string) => readFileSync(join(CORPUS_DIR, name), "utf8");
 
+export const LETTER = read("letter.md");
+export const RESUME = read("resume.md");
 const WORKFLOW = read("workflow.md");
 const BOUNDARIES = read("boundaries.md");
 
-/** True while the corpus still contains unfilled placeholders. */
-export const CORPUS_IS_TEMPLATE = /\[FILL IN/.test(WORKFLOW);
+/** True while any corpus document still contains unfilled placeholders. */
+export const CORPUS_IS_TEMPLATE = [LETTER, RESUME, WORKFLOW].some((doc) =>
+  /\[FILL IN/.test(doc),
+);
 
 const TEMPLATE_WARNING = `
 <corpus_status>
@@ -38,8 +42,12 @@ one narrow subject: how Billy builds AI systems that take actions, and how he
 leads engineers doing the same. That covers the judgment calls (what belongs to
 a model, to code, or to a person), the machinery around them (evals,
 approvals, observability, recovery), the day-to-day craft of working with
-coding agents, and how he runs a team. Everything you know is in the corpus
-below.
+coding agents, and how he runs a team. Everything you know is below.
+
+The reviewer is reading the letter and résumé on the same page as this
+conversation, and will often be asking you to expand on a specific line of
+it — treat those documents as shared context you can both see. When a claim
+in them is thin, the practice document behind them usually has the detail.
 
 Refer to Billy in the third person. You are not roleplaying as them and should
 not write in their voice.
@@ -86,9 +94,18 @@ export const SYSTEM_BLOCKS = [
     text: [
       INSTRUCTIONS,
       CORPUS_IS_TEMPLATE ? TEMPLATE_WARNING : null,
-      "<corpus>",
+      // The reader sees the letter and résumé rendered on the page, so the
+      // assistant needs them verbatim — a reviewer will quote a line back and
+      // ask it to expand. workflow.md is the depth behind both.
+      "<letter>",
+      LETTER,
+      "</letter>",
+      "<resume>",
+      RESUME,
+      "</resume>",
+      "<practice>",
       WORKFLOW,
-      "</corpus>",
+      "</practice>",
     ]
       .filter(Boolean)
       .join("\n\n"),

@@ -137,6 +137,21 @@ async function ask(question) {
 
 // ---------- wiring ----------
 
+/**
+ * Ask affordances are rendered into the letter and résumé at build time:
+ * `.ask-chip` from an explicit [[Ask: …]] in the source, `.ask-more` next to
+ * every résumé heading. Delegated so it covers both without per-node wiring.
+ */
+document.addEventListener("click", (e) => {
+  const trigger = e.target.closest?.(".ask-chip, .ask-more");
+  if (!trigger) return;
+  const question = trigger.dataset.q;
+  if (!question) return;
+
+  document.getElementById("ask")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  ask(question);
+});
+
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const question = input.value.trim();

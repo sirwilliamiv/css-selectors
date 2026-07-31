@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      {{BANNER}}
+
+      <!-- The letter and résumé are rendered from the same corpus files the
+           assistant answers from, so the page and the model cannot drift. -->
+      <section class="doc letter">{{LETTER}}</section>
+
+      <section class="doc resume">{{RESUME}}</section>
+
+      <section class="ask" id="ask">
+        <header class="ask-head">
+          <h2>Ask about any of it</h2>
+          <p>
+            This answers from the same document you just read, and from a
+            longer one on how I actually build. It declines what isn't in
+            there — including anything about your systems, which it knows
+            nothing about.
+          </p>
+        </header>
+
+        <div id="transcript" class="transcript" aria-live="polite" aria-busy="false">
+          <div class="starter">
+            <p class="starter-label">Suggested</p>
+            <div id="suggestions" class="suggestions"></div>
+          </div>
+        </div>
+
+        <form id="composer" class="composer">
+          <label class="sr-only" for="input">Your question</label>
+          <textarea
+            id="input"
+            rows="1"
+            maxlength="2000"
+            placeholder="Ask about the work, the decisions, or how I lead…"
+            autocomplete="off"
+          ></textarea>
+          <button id="send" type="submit">Ask</button>
+        </form>
+      </section>
+
+      <footer class="foot">
+        <p>
+          Claude Opus 5, grounded in a fixed corpus. Everything above and
+          everything it says come from the same source files. Code and eval
+          suite: <a href="{{REPO_URL}}">{{REPO_LABEL}}</a>
+        </p>
+      </footer>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

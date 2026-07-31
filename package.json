@@ -5,7 +5,8 @@
   "type": "module",
   "description": "A grounded assistant that answers questions about how Billy works with AI coding agents.",
   "scripts": {
-    "dev": "vercel dev",
+    "build": "tsx scripts/build.ts",
+    "dev": "npm run build && vercel dev",
     "check": "tsx scripts/check-corpus.ts && tsc --noEmit",
     "eval": "tsx evals/run.ts",
     "predeploy": "npm run check",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@vercel/node": "^5.9.3",
+    "marked": "^18.0.7",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vercel": "^58.4.4"

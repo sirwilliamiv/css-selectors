@@ -61,25 +61,158 @@ body {
   white-space: nowrap;
 }
 
-/* ---- masthead ---- */
+/* ---- rendered documents (letter + résumé) ---- */
 
-.masthead h1 {
+.doc {
+  margin-bottom: 3rem;
+}
+
+.doc h1 {
   font-size: 1.6rem;
   line-height: 1.25;
   letter-spacing: -0.015em;
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.75rem;
   font-weight: 620;
 }
 
-.masthead .sub {
+.doc h2 {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.doc h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+.doc p {
+  margin: 0 0 1rem;
+}
+
+.doc ul {
+  margin: 0 0 1.15rem;
+  padding-left: 1.15rem;
+}
+
+.doc li {
+  margin-bottom: 0.4rem;
+}
+
+.doc a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+
+.doc code {
+  font-family: var(--mono);
+  font-size: 0.87em;
+  background: var(--accent-soft);
+  padding: 0.1em 0.34em;
+  border-radius: 4px;
+}
+
+.doc em {
+  color: var(--ink-soft);
+}
+
+/* The letter reads as prose; give it a touch more air than the résumé. */
+.letter {
+  font-size: 1.02rem;
+}
+
+.letter p {
+  margin-bottom: 1.15rem;
+}
+
+/* Heading + its "Ask" affordance. */
+.entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.75rem 0 0.35rem;
+}
+
+.entry-head + p {
+  color: var(--ink-soft);
+  font-size: 0.925rem;
+}
+
+.ask-more {
+  flex: none;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ask-more:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Inline [[Ask: …]] chip inside prose. */
+.ask-chip {
+  font: inherit;
+  font-size: 0.9em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: 100px;
+  padding: 0.12em 0.7em;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.ask-chip::before {
+  content: "→ ";
+  opacity: 0.6;
+}
+
+.ask-chip:hover {
+  border-color: var(--accent);
+}
+
+/* ---- ask section ---- */
+
+.ask {
+  scroll-margin-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 2rem;
+}
+
+.ask-head h2 {
+  font-size: 1.1rem;
+  font-weight: 620;
+  margin: 0 0 0.4rem;
+}
+
+.ask-head p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 0.975rem;
+  font-size: 0.925rem;
   max-width: 38rem;
 }
 
 .banner {
-  margin-top: 1.5rem;
+  margin-bottom: 2rem;
   padding: 0.75rem 0.9rem;
   border: 1px solid var(--warn-line);
   border-radius: var(--radius);
@@ -259,5 +392,60 @@ body {
 
 @media (max-width: 34rem) {
   .shell { padding-top: 2.25rem; }
-  .masthead h1 { font-size: 1.35rem; }
+  .doc h1 { font-size: 1.35rem; }
+  .entry-head { gap: 0.6rem; }
+}
+
+/* ---- print ----
+   The letter and résumé are the document; the chat is an affordance that
+   doesn't survive paper. A reviewer who prints this should get something
+   that looks like a résumé. */
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --ink: #000;
+    --ink-soft: #333;
+    --ink-faint: #555;
+    --line: #ccc;
+    --accent: #000;
+    --accent-soft: transparent;
+  }
+
+  .ask,
+  .banner,
+  .ask-more,
+  .foot {
+    display: none;
+  }
+
+  .shell {
+    max-width: none;
+    padding: 0;
+  }
+
+  .doc {
+    margin-bottom: 1.5rem;
+  }
+
+  .doc h2 {
+    margin-top: 1.5rem;
+  }
+
+  .entry-head {
+    margin-top: 1rem;
+  }
+
+  /* An inline chip is a dead control on paper — keep the text, drop the affordance. */
+  .ask-chip {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-style: italic;
+  }
+
+  .ask-chip::before {
+    content: none;
+  }
 }

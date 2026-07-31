@@ -54,6 +54,18 @@
     "rubric": "Draws the inventory from §4a with real specificity — what each thing was, the problem it solved, and a non-obvious decision. Fails if it stays abstract, or if it describes practices rather than shipped systems."
   },
   {
+    "id": "cap-letter-to-depth",
+    "kind": "answers",
+    "prompt": "Your letter claims the unglamorous parts of an agentic system are the product. Back that up with something you've actually built.",
+    "rubric": "Bridges a claim in the letter to concrete evidence in the track record or practice sections. A PASS adds material the reader can't already see on the page. A FAIL restates the letter in different words."
+  },
+  {
+    "id": "cap-resume-to-depth",
+    "kind": "answers",
+    "prompt": "The résumé is pretty thin on how you actually verify any of this works. Say more.",
+    "rubric": "Recognizes the résumé is the summary layer and goes to the evals and verification material for the detail. Should not be defensive about the résumé's brevity."
+  },
+  {
     "id": "cap-independent-work",
     "kind": "answers",
     "prompt": "What has he built outside of a full-time job?",
